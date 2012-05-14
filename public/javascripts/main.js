@@ -1,3 +1,13 @@
+$(function () {
+	ImageMapGenerator.init();
+	$('.colorSelector').simpleColor({
+			cellWidth: 9,
+			cellHeight: 9,
+			border: '1px solid #333333',
+			buttonClass: 'button',
+			displayColorCode: true
+	});
+});
 var ImageMapGenerator = {};
 
 ImageMapGenerator = {
@@ -265,7 +275,7 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 				return false;
 			});
 			$(window).on('resize', function () {
-				recacl();
+				recalc();
 			});
 		},
 		generateHtml = function () {
@@ -361,11 +371,11 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			hrefField.val(areas[index].href);
 			titleField.val(areas[index].title);
 		},
-		recacl = function () {
+		recalc = function () {
 			canvasOffsetX = $canvas.offset().left; 
 			canvasOffsetY = $canvas.offset().top;
 		};
-	recacl();
+	recalc();
 	htmlTextarea.val('');
 	toggleEditMapMode();
 	attachEvents();
