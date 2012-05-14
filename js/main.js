@@ -57,8 +57,8 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 		$canvas = $(canvas),
 		ctx = canvas.getContext('2d'),
 		img = imgData,
-		canvasOffsetX = $canvas.offset().left, 
-		canvasOffsetY = $canvas.offset().top,
+		canvasOffsetX, 
+		canvasOffsetY,
 		enableButton = $('.enableButton'),
 		closePathButton = $('.closePathButton'),
 		generateButton = $('.generateButton'),
@@ -264,6 +264,9 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 				undo();
 				return false;
 			});
+			$(window).on('resize', function () {
+				recacl();
+			});
 		},
 		generateHtml = function () {
 			htmlTextarea.fadeIn('slow')
@@ -357,7 +360,12 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 		fillFields = function ( index ) {
 			hrefField.val(areas[index].href);
 			titleField.val(areas[index].title);
+		},
+		recacl = function () {
+			canvasOffsetX = $canvas.offset().left; 
+			canvasOffsetY = $canvas.offset().top;
 		};
+	recacl();
 	htmlTextarea.val('');
 	toggleEditMapMode();
 	attachEvents();
