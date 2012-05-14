@@ -1,0 +1,16 @@
+{
+  "name": "application-name",
+  "version": "0.0.1-2",
+  "private": true,
+  "dependencies": {
+    "express": "2.5.8",
+    "jade": ">= 0.0.1"
+  },
+  "subdomain": "imagemap",
+  "scripts": {
+    "start": "app.js"
+  },
+  "engines": {
+    "node": "0.6.x"
+  }
+}

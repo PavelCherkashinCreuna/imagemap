@@ -1,0 +1,44 @@
+div#wrapper
+	div#header
+		div.headerInner
+			h1.logo Simple image map generator
+	div.content
+		div.imageZoneWrapper
+			div#imageZone drag file here
+		div.clearfix
+			div.canvasHolder
+				div#canvasContainer
+					div#fakeCanvas
+						img(src='images/transparent.gif')#imageMap
+			div.colorsHolder
+				h3 Points and lines color
+				input.colorSelector#strokeCol(value="#000")
+				h3 Fill color
+				input.colorSelector#fillCol(value="#FF8C00")
+				h3 Opacity
+				input#opacity(type='text', value='0.7', maxlength='3')
+		ul.control.clearfix
+			li.generate
+				a.generateButton(href="#") generate
+			li
+				a.closePathButton(href="#") close area
+			li
+				a.undoButton(href="#") undo
+		ul.infoFields
+			li.clearfix
+				label(for="href") href
+				input#href.infoField(type="text")
+			li.clearfix
+				label(for="title") Title
+				input#title.infoField(type="text")
+			li.clearfix
+				a.saveInfo(href="#") save info
+				span.notification saved!!!
+		textarea#mapHtml(cols='30', rows='4')
+		div.helpText Just hit Ctrl+C to copy html
+
+
+
+
+
+
