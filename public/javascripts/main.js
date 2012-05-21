@@ -374,12 +374,25 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 		recalc = function () {
 			canvasOffsetX = $canvas.offset().left; 
 			canvasOffsetY = $canvas.offset().top;
+		},
+		undoKeyboardShortCut = function () {
+			var ctrl = false;
+			$(document).on ('keydown', function (e) {
+				if (e.which == '17') {
+					ctrl = true;
+				} else if (ctrl && e.which =='90') {
+					undo();
+				} else {
+					ctrl = false;
+				}
+			});
 		};
 	recalc();
 	htmlTextarea.val('');
 	toggleEditMapMode();
 	attachEvents();
 	ctx.globalAlpha = opacity;
+	undoKeyboardShortCut();
 }
 
 ImageMapGenerator.init = function () {
