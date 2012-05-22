@@ -217,3 +217,7 @@ h3 {
 	text-align: center;
 	border: 1px solid #000;
 }
+#fakeCanvas.moving area,
+.moving {
+	cursor: move;
+}

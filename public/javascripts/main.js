@@ -96,6 +96,12 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 		fakeCanvas = $('#fakeCanvas'),
 		image = $('#image'),
 		imageFake = $('#imageMap'),
+		closeAreaSensitivity = 4,
+		isPressed = false,
+		moveOffsetX,
+		moveOffsetY,
+		areaIndex,
+		initialArr = [],
 		closeArea = function () {
 			if (points.length > 2) {
 				saveArea();
@@ -142,89 +148,71 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 				drawingFlag = true;
 			}
 		},
-		draw = function ( pageX, pageY) {
-			var coordX = pageX - canvasOffsetX,
-				coordY = pageY - canvasOffsetY,
-				firstPointX,
-				firstPointY,
-				diff = 5,
-				diffX,
-				diffY;
-
-			if ( pointsCount > 2 ) {
-				firstPointX = points[0].x;
-				firstPointY = points[0].y;
-				diffX = firstPointX - coordX;
-				diffY = firstPointY - coordY;
-				if ( (diffX < diff && diffX > -diff ) && (diffY < diff && diffY > -diff ) ) {
-					//areas.push({points: points});
-					closeArea();
-					toggleEditMapMode();
-					return;
-				}
-			}
+		draw = function ( pageX, pageY, redraw) {
 			pointsCount++;
-			drawPoint( coordX, coordY );
-			if ( pointsCount >= 2 ) {
-				drawLine( coordX, coordY );
+			drawPoint( pageX , pageY );
+			if ( pointsCount > 2 && !redraw && tryAutoClose( pageX , pageY )) {
+					return;
 			}
-			prevCoordX = coordX;
-			prevCoordY = coordY;
+			if ( pointsCount >= 2 ) {
+				drawLine( pageX , pageY );
+			}
+			savePoints( pageX , pageY );
+		},
+		savePoints = function ( x , y ) {
+			prevCoordX = x;
+			prevCoordY = y;
 			points.push({
-				x: coordX,
-				y: coordY
+				x: x,
+				y: y
 			});
 		},
 		undo = function () {
 			var newPointsArray;
 			if (!areas.length && points.length) {
 				points.pop();
-				redraw(points);
+				redrawLinesPoints(points);
 			} else if (areas.length && points.length) {
 				points.pop();
-				redraw(points);
+				redrawLinesPoints(points);
 				repaintAreas(areas, true);
 			} else if (areas.length && !points.length) {
 				newPointsArray = areas.pop();
-				redraw(newPointsArray.points);
-				if (areas.length > 2) {
+				redrawLinesPoints(newPointsArray.points);
+				if (areas.length) {
 					repaintAreas(areas, true);
 				} else {
 					points = newPointsArray.points;
 				}
 			}
-			toggleEditMapMode();
+			updateImageMap();
 		},
-		redraw = function ( array ) {
+		redrawLinesPoints = function ( array ) {
 			var i = 0,
 				len = array.length;
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			pointsCount = 0;
 			if (len === 0) {
-				pointsCount = 0;
 				return;
 			}
 			prevCoordX = array[0].x;
 			prevCoordY = array[0].y;
-			pointsCount = 0;
+			points = [];
 			for (; i < len; i++) {
-				pointsCount++;
-				drawPoint( array[i].x, array[i].y );
-				if ( pointsCount >= 2 ) {
-					drawLine( array[i].x, array[i].y );
-				}
+				draw( array[i].x, array[i].y , true )
 			}
 		},
 		attachEvents = function () {
 			ImageMapGenerator.canvasContainer.on('mousedown', function (event) {
 				event.preventDefault();
-				draw(event.pageX, event.pageY);
+				draw(event.pageX - canvasOffsetX, event.pageY - canvasOffsetY);
 			});
 			closePathButton.click(function () {
 				if (points.length) {
 					closeArea();
 					showInfoFields();
 					clearFields();
-					toggleEditMapMode();
+					updateImageMap();
 				}
 				return false;
 			});
@@ -242,13 +230,37 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 				generateHtml();
 				return false;
 			});
-			$('#fakeCanvas').on('mousedown', 'area' , function () {
+			fakeCanvas.on('mousedown', 'area' , function (event) {
 				var index = $(this).index();
 				fillFields(index);
 				saveInfoButton.data('current', index);
 				showInfoFields();
-				hrefField.focus();
 				isEditMode = true;
+				isPressed = true;
+				moveOffsetX = event.pageX - canvasOffsetX;
+				moveOffsetY = event.pageY - canvasOffsetY;
+				areaIndex = index;
+				initialArr = areas[index].points;
+				fakeCanvas.addClass('moving');
+				return false;
+			});
+			fakeCanvas.on('mousemove', function (e) {
+				var index;
+				if (isPressed) {
+					dragRecalc(areaIndex, e.pageX - canvasOffsetX , e.pageY - canvasOffsetY);
+				}
+				return false;
+			});
+			fakeCanvas.on('mouseup' , function () {
+				if (isPressed) {
+					isPressed = false;
+					updateImageMap();
+					if (htmlTextarea.is(':visible')) {
+						generateHtml();
+					}
+				}
+				hrefField.focus();
+				fakeCanvas.removeClass('moving');
 				return false;
 			});
 			hrefField.add(titleField).on('keyup', function (e) {
@@ -297,8 +309,6 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			ctx.lineTo(x,y);
 			ctx.closePath();
 			ctx.stroke();
-			prevCoordX = x;
-			prevCoordY = y; 
 		},
 		getArea = function ( obj ) {
 			var i = 0,
@@ -349,9 +359,9 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			hrefField.val('');
 			titleField.val('');
 		},
-		toggleEditMapMode = function () {
+		updateImageMap = function () {
 			var mapHtml,
-				map = $('#map');
+				map = $('#map'),
 				mapHtml = getHtml();
 			imageFake.css({
 				width: image.width(),
@@ -386,10 +396,46 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 					ctrl = false;
 				}
 			});
+		},
+		tryAutoClose = function ( x , y ) {
+			var firstPointX = points[0].x,
+				firstPointY = points[0].y,
+				diffX = firstPointX - x,
+				diffY = firstPointY - y,
+				diff = closeAreaSensitivity;
+
+			if ( (diffX < diff && diffX > -diff ) && (diffY < diff && diffY > -diff ) ) {
+				closeArea();
+				updateImageMap();
+				return true;
+			}
+		},
+		entireRepaint = function () {
+			if (points.length) {
+				redrawLinesPoints(points);
+			}
+			if (areas.length) {
+				repaintAreas(areas);
+			}
+		},
+		dragRecalc = function ( index, x, y ) {
+			var arr = [],
+				i = 0,
+				len = initialArr.length;
+				diffX = x - moveOffsetX,
+				diffY = y - moveOffsetY;
+			for(; i < len; i++) {
+				arr[i] = {};
+				arr[i].x = initialArr[i].x + diffX;
+				arr[i].y = initialArr[i].y + diffY; 
+			}
+			
+			areas[index].points = arr;
+			entireRepaint();
 		};
 	recalc();
 	htmlTextarea.val('');
-	toggleEditMapMode();
+	updateImageMap();
 	attachEvents();
 	ctx.globalAlpha = opacity;
 	undoKeyboardShortCut();
