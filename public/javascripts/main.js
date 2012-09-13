@@ -96,6 +96,8 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 		fakeCanvas = $('#fakeCanvas'),
 		image = $('#image'),
 		imageFake = $('#imageMap'),
+		autoNumCheckbox = $('#autoNum'),
+		autoNumPrefix = $('#autoPrefix'),
 		closeAreaSensitivity = 4,
 		isPressed = false,
 		moveOffsetX,
@@ -119,7 +121,9 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			var i = 0,
 				array = obj.points,
 				len = array.length;
-
+			if (obj.lineWidth) {
+				ctx.lineWidth = obj.lineWidth;
+			}
 			ctx.beginPath();
 			ctx.moveTo(array[i].x,array[i].y);
 			for(; i < len; i++) {
@@ -129,6 +133,7 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			ctx.closePath();
 			ctx.stroke();
 			ctx.fill();
+			ctx.lineWidth = 1;
 		},
 		repaintAreas = function ( array, clearCanvas ) {
 			if (!clearCanvas) {
@@ -205,6 +210,7 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 		attachEvents = function () {
 			ImageMapGenerator.canvasContainer.on('mousedown', function (event) {
 				event.preventDefault();
+				recalc();
 				draw(event.pageX - canvasOffsetX, event.pageY - canvasOffsetY);
 			});
 			closePathButton.click(function () {
@@ -241,7 +247,9 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 				moveOffsetY = event.pageY - canvasOffsetY;
 				areaIndex = index;
 				initialArr = areas[index].points;
+				setSelectedStyle(index, 3);
 				fakeCanvas.addClass('moving');
+				entireRepaint();
 				return false;
 			});
 			fakeCanvas.on('mousemove', function (e) {
@@ -263,7 +271,7 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 				fakeCanvas.removeClass('moving');
 				return false;
 			});
-			hrefField.add(titleField).on('keyup', function (e) {
+			hrefField.add(titleField).add(autoPrefix).on('keyup', function (e) {
 				if (e.which == '13') {
 					if (isEditMode) {
 						saveAreaInfo(true);
@@ -289,6 +297,15 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			$(window).on('resize', function () {
 				recalc();
 			});
+			autoNumCheckbox.on('change' , function () {
+				if ($(this).is(':checked')) {
+					autoNumPrefix.removeAttr('readonly')
+								 .focus();
+					hideInfoFields();
+				} else {
+					showInfoFields();
+				}
+			})
 		},
 		generateHtml = function () {
 			htmlTextarea.fadeIn('slow')
@@ -310,29 +327,43 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			ctx.closePath();
 			ctx.stroke();
 		},
-		getArea = function ( obj ) {
+		getArea = function ( obj , number) {
 			var i = 0,
 				array = obj.points,
 				len = array.length,
 				htmlCoords = [],
-				href = obj.href ? 'href="' + obj.href +'" ' : '',
-				title = obj.title ? 'title="' + obj.title +'" ' : '';
+				href = obj.href ? 'href="' + obj.href +'" ' : 'href="#" ',
+				title = obj.title ? 'title="' + obj.title +'" ' : 'title=""';
+
 			for(; i < len; i++) {
 				htmlCoords.push(array[i].x);
 				htmlCoords.push(array[i].y);
 			}
-			return '<area shape="poly" coords="' + htmlCoords.join(',') + '" ' + href + title + '>';
+			return '<area shape="poly" coords="' + htmlCoords.join(',') + '" ' + href + title + ' alt="" >';
 		},
 		getHtml = function () {
 			var area,
-				areaStr = '';
+				areaStr = '',
+				autoNumMode = autoNumCheckbox.is(':checked'),
+				prefix = '#' + autoNumPrefix.val();
+
 			for (var i = 0, len = areas.length; i < len; i++) {
-				areaStr += '\t' + getArea(areas[i]) + '\n';
+				if (autoNumMode) {
+					areas[i].href = prefix + '-' + (i + 1);
+					areaStr += '\t' + getArea(areas[i], i) + '\n'
+				} else {
+					areaStr += '\t' + getArea(areas[i], i) + '\n';
+				}
 			}
 			return '<map name="imageMap">\n' + areaStr + '</map>';
 		},
 		showInfoFields = function () {
-			infoFields.fadeIn(200);
+			if (!autoNumCheckbox.is(':checked')) {
+				infoFields.fadeIn(200);
+			}
+		},
+		hideInfoFields = function () {
+			infoFields.fadeOut(200);
 		},
 		saveAreaInfo = function ( inEditMode ) {
 			var areaInfo = getAreaInfo(),
@@ -432,6 +463,12 @@ ImageMapGenerator.mapGenerator = function (imgData) {
 			
 			areas[index].points = arr;
 			entireRepaint();
+		},
+		setSelectedStyle = function (index, lineWidth) {
+			for(var i = 0, len = areas.length; i < len; i++) {
+				delete areas[i].lineWidth;
+			}
+			areas[index].lineWidth = lineWidth;
 		};
 	recalc();
 	htmlTextarea.val('');

@@ -4,7 +4,8 @@ div#wrapper
 			h1.logo Simple image map generator
 	div.content
 		div.imageZoneWrapper
-			div#imageZone drag file here
+			div#imageZone
+				span.text drag file here
 		div.clearfix
 			div.canvasHolder
 				div#canvasContainer
@@ -17,6 +18,9 @@ div#wrapper
 				input.colorSelector#fillCol(value="#FF8C00")
 				h3 Opacity
 				input#opacity(type='text', value='0.7', maxlength='3')
+				h3 Auto Numeration Prefix
+				input#autoNum(type='checkbox')
+				input#autoPrefix(type='text', readonly='readonly')
 		ul.control.clearfix
 			li.generate
 				a.generateButton(href="#") generate

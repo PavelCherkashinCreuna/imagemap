@@ -4,8 +4,13 @@ html {
 body {
 	margin: 0;
 	height: 100%;
-	min-width: 1003px;
+	min-width: 980px;
 	font: 12px/17px 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+}
+* {
+	-moz-transition: all 0.2s;
+	-webkit-transition: all 0.2s;
+	transition: all 0.2s;
 }
 #wrapper {
 	min-height: 100%;
@@ -35,17 +40,33 @@ h3 {
 .imageZoneWrapper {
 	margin: 0 0 0 80px;
 }
+.imageZoneWrapper {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	left: 0;
+	top: 0;
+	padding: 95px 20px 20px;
+	margin: 0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
 #imageZone {
+	display: table;
 	border: 2px dashed grey;
 	border-radius: 10px;
-	width: 300px;
-	height: 300px;
+	width: 100%;
+	height: 100%;
 	text-align: center;
-	display: table-cell;
 	font-size: 20px;
 	color: #ccc;
-	vertical-align: middle;
 	font-weight: bold;
+}
+#imageZone .text {
+	display: table-cell;
+	height: 100%;
+	vertical-align: middle;
 }
 #image {
 	position: absolute;
@@ -118,6 +139,9 @@ h3 {
 }
 .imageLoaded .control {
 	display: block;
+}
+.imageLoaded .imageZoneWrapper{
+	display: none;
 }
 .fileUploader {
 	margin-top: 15px;
@@ -216,6 +240,7 @@ h3 {
 	width: 50px;
 	text-align: center;
 	border: 1px solid #000;
+	margin: 0 0 10px;
 }
 #fakeCanvas.moving area,
 .moving {
